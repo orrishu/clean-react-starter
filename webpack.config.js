@@ -3,7 +3,9 @@ const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin') //extract-text-webpack-plugin replacement
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
+const DashboardPlugin = require('webpack-dashboard/plugin')
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const relpath = path.join.bind(path, __dirname)
 
 const NODE_ENV = process.env.NODE_ENV || 'development'
@@ -45,21 +47,29 @@ module.exports = {
       path.join(__dirname, 'src'),
       'node_modules'
     ]
-    //,extensions: ['.js', '.jsx', '.scss']
+    //,extensions: ['.js', '.jsx', '.scss', '.less']
   },
   optimization: {
     minimizer: [
-      // we specify a custom UglifyJsPlugin here to get source maps in production
-      new UglifyJsPlugin({
-        cache: true,
-        parallel: true,
-        uglifyOptions: {
-          compress: false,
+      new TerserPlugin({
+        include: paths.src,
+        terserOptions: {
           ecma: 6,
-          mangle: true
-        },
-        sourceMap: true
-      })
+          warnings: false,
+          parse: {},
+          compress: {},
+          mangle: true, // Note `mangle.properties` is `false` by default.
+          module: false,
+          output: null,
+          toplevel: false,
+          nameCache: null,
+          ie8: false,
+          keep_classnames: undefined,
+          keep_fnames: false,
+          safari10: false
+        }
+      }),
+      new OptimizeCSSAssetsPlugin({})
     ]
   },
   module: {
@@ -97,8 +107,27 @@ module.exports = {
           },
           'sass-loader'
         ]
-      },
-      {
+      }, {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }, {
+        test: /\.less$/,
+        use: [{
+          loader: 'style-loader'
+        }, {
+          loader: MiniCssExtractPlugin.loader,
+          options: {
+            hmr: isDevelopmentServer
+          }
+        }, {
+          loader: 'css-loader' // translates CSS into CommonJS
+        }, {
+          loader: 'less-loader',
+          options: {
+            javascriptEnabled: true
+          }
+        }]
+      }, {
         test: /\.json$/,
         loaders: ['json']
       },
@@ -109,7 +138,7 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/preset-react']
+              presets: ['@babel/preset-react' /*, '@babel/preset-env'*/]
             }
           }
         ]
@@ -184,8 +213,13 @@ function getPlugins() {
     isDevelopmentServer ?
       new webpack.HotModuleReplacementPlugin()
       :
-      new UglifyJsPlugin()
+      new TerserPlugin()
   ])
+
+  if (isDevelopmentServer) {
+    plugins = plugins.concat([new DashboardPlugin()])
+  }
+
   /*
   if (isDevelopmentServer) {
     plugins = plugins.concat([
