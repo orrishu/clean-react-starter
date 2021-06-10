@@ -8,7 +8,7 @@ import './global.scss'  //important!! need to import that css here only!!
 //use className when needed instead of styleName (foundation stuff), otherwise css will be huge and app will be stuck ....
 
 function mount() {
-  const App = require('./components/app').default
+  const App = require('./components/App').default
   render(
     <AppContainer>
       <Provider {...stores}>
@@ -20,6 +20,6 @@ function mount() {
 }
 
 if (module.hot) {
-  module.hot.accept('App', mount)
+  module.hot.accept('./components/App', mount)
 }
 mount()
