@@ -16,7 +16,7 @@ prerequisites
 ------------
 ```
 node >= 12.6.0;
-updated for node version 16.3.0, start and rebuild scripts working as expected.
+updated for node version 14.14.0, start and rebuild scripts working as expected.
 ```
 development
 -----------
