@@ -10,6 +10,7 @@ react 16.12.0;
 react-router 5.1.2; 
 babel-plugin-react-css-modules 5.2.6; 
 mobx 4.13.0 (to allow compile for IE, cannot use mobx 5).
+note: use sass-loader ^10.0.0 due to issues on npm start.
 ```
 prerequisites
 ------------
