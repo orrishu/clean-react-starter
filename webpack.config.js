@@ -2,7 +2,7 @@ const path = require('path')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin') //extract-text-webpack-plugin replacement
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const DashboardPlugin = require('webpack-dashboard/plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -38,7 +38,7 @@ module.exports = {
   entry: getEntryPoints(),
   output: {
     path: paths.dist,
-    filename: '[name].[hash].bundle.js',
+    filename: '[name].[contenthash].bundle.js',
     publicPath: ASSET_PATH
   },
   plugins: getPlugins(),
@@ -70,7 +70,11 @@ module.exports = {
         }
       }),
       new OptimizeCSSAssetsPlugin({})
-    ]
+    ],
+    emitOnErrors: false,
+    splitChunks: {
+      chunks: 'all'
+    }
   },
   module: {
     rules: [
@@ -79,30 +83,33 @@ module.exports = {
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
-            options: {
+            /*options: {
               hmr: isDevelopmentServer
-            }
+            }*/
           },
           {
             loader: 'css-loader',
             options: {
-              importLoaders: 2,
+              //importLoaders: 2,
               modules: {
                 mode: 'local',
-                localIdentName: '[path]___[name]__[local]___[hash:base64:5]',
-                context: process.cwd()   //note: must match react-css-modules context. this is a default that I could not fix
+                localIdentName: '[path]___[name]__[local]___[hash:base64:5]',				
+                //context: process.cwd()   //note: must match react-css-modules context. this is a default that I could not fix
+                localIdentContext: process.cwd()
               }
             }
           },
           {
             loader: 'postcss-loader',
             options: {
-              ident: 'postcss',
-              generateScopedName: '[path]___[name]__[local]___[hash:base64:5]',
-              plugins: [
-                require('autoprefixer')(),
-				        require('cssnano')()
-              ]
+              postcssOptions: {
+                //ident: 'postcss',
+                generateScopedName: '[path]___[name]__[local]___[hash:base64:5]',              
+                plugins: [
+                  require('autoprefixer')(),
+                  require('cssnano')()
+                ]
+              }
             }
           },
           'sass-loader'
@@ -116,20 +123,23 @@ module.exports = {
           loader: 'style-loader'
         }, {
           loader: MiniCssExtractPlugin.loader,
-          options: {
+          /*options: {
             hmr: isDevelopmentServer
-          }
+          }*/
         }, {
           loader: 'css-loader' // translates CSS into CommonJS
         }, {
           loader: 'less-loader',
           options: {
-            javascriptEnabled: true
+            lessOptions: {
+              javascriptEnabled: true
+            }
           }
         }]
       }, {
         test: /\.json$/,
-        loaders: ['json']
+        //loaders: ['json']
+        use: ['json-loader']
       },
       {
         test: /\.jsx?$/,
@@ -153,7 +163,8 @@ module.exports = {
       },
       {
         test: /\.(png|gif|jpg|jpeg|eot|otf|woff|ttf|svg)?$/,
-        loaders: ['url-loader'],
+        //loaders: ['url-loader'],
+        type: 'asset/inline',
         include: paths.src
       }
     ]
@@ -186,7 +197,6 @@ function getEntryPoints() {
 function getPlugins() {
   let plugins = [
     new CleanWebpackPlugin(),
-    new webpack.NoEmitOnErrorsPlugin(),
     new HtmlWebpackPlugin({
       template: `html-loader!${paths.indexHtml}`,
       inject: true
@@ -204,8 +214,8 @@ function getPlugins() {
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional
-      filename: isDevelopmentServer ? '[name].css' : '[name].[hash].css',
-      chunkFilename: isDevelopmentServer ? '[id].css' : '[id].[hash].css'
+      filename: isDevelopmentServer ? '[name].css' : '[name].[contenthash].css',
+      chunkFilename: isDevelopmentServer ? '[id].css' : '[id].[contenthash].css'
     })
   ])
 
@@ -219,30 +229,6 @@ function getPlugins() {
   if (isDevelopmentServer) {
     plugins = plugins.concat([new DashboardPlugin()])
   }
-
-  /*
-  if (isDevelopmentServer) {
-    plugins = plugins.concat([
-      new MiniCssExtractPlugin({
-        // Options similar to the same options in webpackOptions.output
-        // both options are optional
-        filename: '[name].css',
-        chunkFilename: '[id].css'
-      }),
-      new webpack.HotModuleReplacementPlugin()
-    ])
-  }
-
-  if (isProductionCode) {
-    plugins = plugins.concat([
-      new MiniCssExtractPlugin({
-        filename: '[name].[hash].css',
-        chunkFilename: '[id].[hash].css',
-      }),
-      //new webpack.optimize.OccurenceOrderPlugin()
-      new UglifyJsPlugin()
-    ])
-  }*/
 
   return plugins
 }
