@@ -23,7 +23,7 @@ Since this repo is class-components based and is already obsolete,
 I needed to stay on older versions of the following:  
 - mobx version 4.13.0;
 - react-router version 5.2.1; 
-- history version 4.10.1 (if uograded, routing via mobx will not work) .  
+- history version 4.10.1 (if upgraded, routing via mobx will not work) .  
 
 
 ### upgraded to webpack 5 (5.64.1, 18/11/2021)
