@@ -29,8 +29,7 @@ module.exports = {
     compress: true,
     hot: true,
     port: process.env.PORT || '9000',
-    historyApiFallback: true,
-    disableHostCheck: true
+    historyApiFallback: true
   },
   context: path.resolve(__dirname, 'src'),
   devtool: getSourceMap(),
@@ -76,6 +75,12 @@ module.exports = {
       chunks: 'all'
     }
   },
+  ignoreWarnings: [
+    {
+      file: /mobxreact.esm\.js\?[34]/ //, // A RegExp
+    },    
+    (warning) => true
+  ],
   module: {
     rules: [
       {
@@ -136,10 +141,6 @@ module.exports = {
             }
           }
         }]
-      }, {
-        test: /\.json$/,
-        //loaders: ['json']
-        use: ['json-loader']
       },
       {
         test: /\.jsx?$/,
